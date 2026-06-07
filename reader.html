@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C LA KRISE - Lire le numéro</title>
+    <meta name="description" content="Lire le numéro de la semaine de C LA KRISE.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-red: #FF5757;
+            --color-black: #111111;
+            --color-white: #FFFFFF;
+            --color-beige: #ECEADA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background-color: var(--color-black);
+            color: var(--color-white);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Top bar */
+        .topbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(17,17,17,0.95);
+            border-bottom: 2px solid var(--color-red);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .topbar-title span { color: var(--color-red); }
+        .topbar-back {
+            color: var(--color-beige);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--color-beige);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .topbar-back:hover {
+            background: var(--color-beige);
+            color: var(--color-black);
+        }
+
+        /* Reader area */
+        .reader {
+            margin-top: 80px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 1.5rem;
+        }
+
+        /* Pages container */
+        .spread {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            transition: opacity 0.3s ease;
+        }
+        .spread.fading { opacity: 0.3; }
+
+        .spread canvas {
+            display: block;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            max-height: calc(100vh - 200px);
+        }
+
+        /* Shadow between pages */
+        .spine-shadow {
+            width: 4px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.4), transparent, rgba(0,0,0,0.4));
+            align-self: stretch;
+            border-radius: 2px;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        .nav-btn {
+            background: none;
+            border: 2px solid var(--color-red);
+            color: var(--color-white);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-btn:hover:not(:disabled) {
+            background: var(--color-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,87,87,0.4);
+        }
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .page-info {
+            font-size: 0.95rem;
+            color: #999;
+            font-weight: 700;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #333;
+            border-top-color: var(--color-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive: single page on small screens */
+        @media (max-width: 768px) {
+            .spread { flex-direction: column; }
+            .spine-shadow { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="topbar-title">C LA <span>KRISE</span></div>
+        <a href="index.html" class="topbar-back">&larr; Retour</a>
+    </header>
+
+    <div class="reader">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            Chargement du magazine…
+        </div>
+
+        <div id="spread" class="spread" style="display:none;"></div>
+
+        <div id="nav" class="nav" style="display:none;">
+            <button class="nav-btn" id="prev-btn" onclick="prevSpread()">&larr; Précédent</button>
+            <div class="page-info" id="page-info"></div>
+            <button class="nav-btn" id="next-btn" onclick="nextSpread()">Suivant &rarr;</button>
+        </div>
+    </div>
+
+    <!-- PDF.js from Mozilla CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+
+        let pdfDoc = null;
+        let currentSpreadStart = 1; // page number of the left page
+        let totalPages = 0;
+        const isSmall = () => window.innerWidth <= 768;
+
+        const spreadEl = document.getElementById('spread');
+        const loadingEl = document.getElementById('loading');
+        const navEl = document.getElementById('nav');
+        const pageInfoEl = document.getElementById('page-info');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        async function loadPDF() {
+            try {
+                pdfDoc = await pdfjsLib.getDocument('magazine.pdf').promise;
+                totalPages = pdfDoc.numPages;
+                loadingEl.style.display = 'none';
+                spreadEl.style.display = 'flex';
+                navEl.style.display = 'flex';
+                renderSpread();
+            } catch (err) {
+                loadingEl.innerHTML = '<div style="color:var(--color-red);font-weight:700;">Impossible de charger le PDF.</div><div style="font-size:0.85rem;margin-top:0.5rem;">Vérifie que le fichier <code>magazine.pdf</code> est bien présent.</div>';
+                console.error(err);
+            }
+        }
+
+        async function renderPage(pageNum) {
+            const page = await pdfDoc.getPage(pageNum);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Calculate scale to fit nicely
+            const viewport0 = page.getViewport({ scale: 1 });
+            const maxH = window.innerHeight - 200;
+            const maxW = isSmall() ? window.innerWidth - 48 : (window.innerWidth / 2) - 60;
+            const scale = Math.min(maxH / viewport0.height, maxW / viewport0.width, 2);
+            const viewport = page.getViewport({ scale });
+
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.width = viewport.width + 'px';
+            canvas.style.height = viewport.height + 'px';
+
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            return canvas;
+        }
+
+        async function renderSpread() {
+            spreadEl.classList.add('fading');
+            await new Promise(r => setTimeout(r, 150));
+
+            spreadEl.innerHTML = '';
+
+            // Page de gauche
+            const leftCanvas = await renderPage(currentSpreadStart);
+            spreadEl.appendChild(leftCanvas);
+
+            // En mode deux pages : ajouter la page de droite si elle existe
+            const rightPageNum = currentSpreadStart + 1;
+            if (!isSmall() && rightPageNum <= totalPages) {
+                const spine = document.createElement('div');
+                spine.className = 'spine-shadow';
+                spreadEl.appendChild(spine);
+
+                const rightCanvas = await renderPage(rightPageNum);
+                spreadEl.appendChild(rightCanvas);
+            }
+
+            updateNav();
+            spreadEl.classList.remove('fading');
+        }
+
+        function updateNav() {
+            const step = isSmall() ? 1 : 2;
+            const rightPage = Math.min(currentSpreadStart + step - 1, totalPages);
+
+            if (currentSpreadStart === rightPage) {
+                pageInfoEl.textContent = `Page ${currentSpreadStart} / ${totalPages}`;
+            } else {
+                pageInfoEl.textContent = `Pages ${currentSpreadStart}–${rightPage} / ${totalPages}`;
+            }
+
+            prevBtn.disabled = currentSpreadStart <= 1;
+            nextBtn.disabled = currentSpreadStart + step > totalPages;
+        }
+
+        window.prevSpread = function () {
+            const step = isSmall() ? 1 : 2;
+            currentSpreadStart = Math.max(1, currentSpreadStart - step);
+            renderSpread();
+        };
+
+        window.nextSpread = function () {
+            const step = isSmall() ? 1 : 2;
+            if (currentSpreadStart + step <= totalPages) {
+                currentSpreadStart += step;
+                renderSpread();
+            }
+        };
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { window.prevSpread(); }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { window.nextSpread(); }
+        });
+
+        // Swipe support for mobile
+        let touchStartX = 0;
+        spreadEl.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].clientX;
+        });
+        spreadEl.addEventListener('touchend', (e) => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(diff) > 50) {
+                if (diff < 0) window.nextSpread();
+                else window.prevSpread();
+            }
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => { if (pdfDoc) renderSpread(); });
+
+        loadPDF();
+    </script>
+</body>
+</html>
