@@ -52,7 +52,12 @@
             letter-spacing: 0.05em;
         }
         .topbar-title span { color: var(--color-red); }
-        .topbar-back {
+        .topbar-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .topbar-back, .topbar-download {
             color: var(--color-beige);
             text-decoration: none;
             font-weight: 700;
@@ -62,9 +67,17 @@
             border-radius: 4px;
             transition: all 0.2s ease;
         }
-        .topbar-back:hover {
+        .topbar-back:hover, .topbar-download:hover {
             background: var(--color-beige);
             color: var(--color-black);
+        }
+        .topbar-download {
+            border-color: var(--color-red);
+            color: var(--color-red);
+        }
+        .topbar-download:hover {
+            background: var(--color-red);
+            color: var(--color-white);
         }
 
         /* Reader area */
@@ -174,7 +187,10 @@
 
     <header class="topbar">
         <div class="topbar-title">C LA <span>KRISE</span></div>
-        <a href="index.html" class="topbar-back">&larr; Retour</a>
+        <div class="topbar-actions">
+            <a href="magazine.pdf" download class="topbar-download">&#8681; Télécharger</a>
+            <a href="index.html" class="topbar-back">&larr; Retour</a>
+        </div>
     </header>
 
     <div class="reader">
